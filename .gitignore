@@ -38,3 +38,11 @@ logs/
 
 # Environment variables
 .env
+
+# AWS artifacts
+.aws/
+function.zip
+response.json
+
+# Testing Excel files
+local_excel_files/
