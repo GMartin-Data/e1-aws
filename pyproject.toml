@@ -8,9 +8,11 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.12"  # Stable, pinned to avoid issues with 3.13+ compatibility
 dependencies = [
+    "fastapi[all]>=0.115.12",
     "pandas>=2.3.0",
     "pydantic-settings>=2.9.1",
     "pymysql>=1.1.1",
+    "sqlalchemy>=2.0",
 ]
 
 [tool.ruff]
