@@ -38,3 +38,8 @@ logs/
 
 # Environment variables
 .env
+
+# AWS artifacts
+.aws/
+function.zip
+response.json
