@@ -41,8 +41,9 @@ select = [
 ignore = [
     "D100", # Missing docstring in public module
     "D104", # Missing docstring in public package
-    "D211", # Incompatible with D203 (no blank line before class docstring) - choose D203
-    "D213", # Incompatible with D212 (multi-line summary first line) - choose D212
+    "D203", # Avoid "1 blank line required before class docstring"
+    "D205", # Avoid "1 blank line required between summary line and description"
+    "D212", # Avoid "Multi-line docstring summary should start at the first line"
 ]
 
 [tool.ruff.lint.per-file-ignores]
