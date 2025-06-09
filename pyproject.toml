@@ -1,0 +1,56 @@
+[project]
+name = "e1-aws"
+version = "0.1.0"
+description = "Automated Excel to MySQL data ingestion workflow and REST API"
+authors = [
+    { name = "Gregory MARTIN", email = "gregory.martin.data@gmail.com" },
+]
+readme = "README.md"
+requires-python = "==3.12"  # Stable, pinned to avoid issues with 3.13+ compatibility
+dependencies = []
+
+[tool.ruff]
+line-length = 120
+target-version = "py312" # Set target Python version for Ruff
+# List of rules to enable/disable. We'll start with a common set.
+# Check https://docs.astral.sh/uv/ for full list
+select = [
+    "E",   # Error
+    "F",   # Pyflakes
+    "W",   # Warning
+    "I",   # Isort
+    "C90", # Complexity
+    "N",   # Naming
+    "D",   # Docstrings (we'll enforce these)
+    "UP",  # pyupgrade
+    "ANN", # Annotations
+    "ARG", # Arguments
+    "B",   # Bugbear
+    "C",   # Complexity (from flake8-comprehensions, etc.)
+    "G",   # Flake8-logging-format
+    "TID", # Tidiness
+    # "V",   # Vulture (unused code) - can be noisy initially, use with care, keeping it off for now.
+]
+ignore = [
+    "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
+    # E501 handled by line-length = 120 when using Ruff's formatter
+]
+
+[tool.ruff.per-file-ignores]
+# Ignore docstring rules in tests for now
+"tests/*" = ["D"]
+# Ignore specific rules for __init__.py files
+"**/__init__.py" = ["F401"] # F401: `from x import y` imported but unused
+
+[tool.ruff.format]
+# Enable Ruff's formatter
+# These settings are valid for Ruff's formatter, but may cause warnings in older TOML schema validators.
+# We will keep them here as they are correct for Ruff itself.
+indent-style = "space"
+indent-width = 4
+quote-style = "double"
+
+[build-system]
+requires = ["uv>=0.1.0"]
+build-backend = "uv.build"

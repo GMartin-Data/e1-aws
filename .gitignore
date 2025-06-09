@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/ # uv creates .venv by default
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+.env # This is crucial: DO NOT commit your actual .env file
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+jupyter_notebooks/ # If you ever add notebooks
+
+# Operating System
+.DS_Store
+.Trash-*
+Thumbs.db
+ehthumbs.db
+
+# VSCode
+.vscode/*.log
+.vscode/*.code-workspace
+.vscode/settings.json # Only if you want to keep specific settings private
+.vscode/tasks.json
+.vscode/launch.json
+
+# Logs
+logs/
+*.log
+*.jsonl
