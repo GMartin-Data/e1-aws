@@ -6,14 +6,19 @@ authors = [
     { name = "Gregory MARTIN", email = "gregory.martin.data@gmail.com" },
 ]
 readme = "README.md"
-requires-python = "==3.12"  # Stable, pinned to avoid issues with 3.13+ compatibility
-dependencies = []
+requires-python = ">=3.12"  # Stable, pinned to avoid issues with 3.13+ compatibility
+dependencies = [
+    "pandas>=2.3.0",
+    "pydantic-settings>=2.9.1",
+    "pymysql>=1.1.1",
+]
 
 [tool.ruff]
 line-length = 120
 target-version = "py312" # Set target Python version for Ruff
 # List of rules to enable/disable. We'll start with a common set.
-# Check https://docs.astral.sh/uv/ for full list
+
+[tool.ruff.lint]
 select = [
     "E",   # Error
     "F",   # Pyflakes
@@ -23,21 +28,22 @@ select = [
     "N",   # Naming
     "D",   # Docstrings (we'll enforce these)
     "UP",  # pyupgrade
-    "ANN", # Annotations
+    "ANN", # Annotations (this selects all ANN rules including ANN101, ANN102)
     "ARG", # Arguments
     "B",   # Bugbear
     "C",   # Complexity (from flake8-comprehensions, etc.)
     "G",   # Flake8-logging-format
     "TID", # Tidiness
-    # "V",   # Vulture (unused code) - can be noisy initially, use with care, keeping it off for now.
+
 ]
 ignore = [
     "D100", # Missing docstring in public module
     "D104", # Missing docstring in public package
-    # E501 handled by line-length = 120 when using Ruff's formatter
+    "D211", # Incompatible with D203 (no blank line before class docstring) - choose D203
+    "D213", # Incompatible with D212 (multi-line summary first line) - choose D212
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 # Ignore docstring rules in tests for now
 "tests/*" = ["D"]
 # Ignore specific rules for __init__.py files
@@ -45,12 +51,16 @@ ignore = [
 
 [tool.ruff.format]
 # Enable Ruff's formatter
-# These settings are valid for Ruff's formatter, but may cause warnings in older TOML schema validators.
-# We will keep them here as they are correct for Ruff itself.
+
 indent-style = "space"
-indent-width = 4
 quote-style = "double"
 
 [build-system]
-requires = ["uv>=0.1.0"]
-build-backend = "uv.build"
+requires = ["setuptools>=61.0"] # Changed from uv to setuptools
+build-backend = "setuptools.build_meta" # Changed from uv.build
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "ruff>=0.11.13",
+]
