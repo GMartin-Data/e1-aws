@@ -1,6 +1,6 @@
 """Contains models to create the database."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import declarative_base, relationship
@@ -55,11 +55,11 @@ class DataTable(Base):
     id = Column(String(255), primary_key=True, index=True)
     nom = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)  # Text rather than String for flexibility, explicitely nullable
-    date_creation = Column(DateTime, default=datetime.now(datetime.UTC))  # type: ignore [reportAttributeAccessIssue]
+    date_creation = Column(DateTime, default=datetime.now(timezone.utc))  # type: ignore [reportAttributeAccessIssue]
     date_derniere_modification = Column(
         DateTime,
-        default=datetime.now(datetime.UTC),  # type: ignore [reportAttributeAccessIssue]
-        onupdate=datetime.now(datetime.UTC),  # type: ignore [reportAttributeAccessIssue]
+        default=datetime.now(timezone.utc),  # type: ignore [reportAttributeAccessIssue]
+        onupdate=datetime.now(timezone.utc),  # type: ignore [reportAttributeAccessIssue]
     )
     domaine_id = Column(String(255), ForeignKey("domaines.id"), nullable=False, index=True)
 
@@ -84,11 +84,11 @@ class DataColonne(Base):
     nom = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)  # Text rather than String for flexibility, explicitely nullable
     data_type = Column(String(50), nullable=True)
-    date_creation = Column(DateTime, default=datetime.now(datetime.UTC))  # type: ignore [reportAttributeAccessIssue]
+    date_creation = Column(DateTime, default=datetime.now(timezone.utc))  # type: ignore [reportAttributeAccessIssue]
     date_derniere_modification = Column(
         DateTime,
-        default=datetime.now(datetime.UTC),  # type: ignore [reportAttributeAccessIssue]
-        onupdate=datetime.now(datetime.UTC),  # type: ignore [reportAttributeAccessIssue]
+        default=datetime.now(timezone.utc),  # type: ignore [reportAttributeAccessIssue]
+        onupdate=datetime.now(timezone.utc),  # type: ignore [reportAttributeAccessIssue]
     )
     data_table_id = Column(String(255), ForeignKey("data_tables.id"), nullable=False, index=True)
 
