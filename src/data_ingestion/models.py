@@ -58,7 +58,7 @@ class DataTable(Base):
     date_creation = Column(DateTime, default=datetime.now(datetime.UTC))  # type: ignore [reportAttributeAccessIssue]
     date_derniere_modification = Column(
         DateTime,
-        default=datetime.now(datetime.UTC),
+        default=datetime.now(datetime.UTC),  # type: ignore [reportAttributeAccessIssue]
         onupdate=datetime.now(datetime.UTC),  # type: ignore [reportAttributeAccessIssue]
     )
     domaine_id = Column(String(255), ForeignKey("domaines.id"), nullable=False, index=True)
