@@ -16,6 +16,7 @@ dependencies = [
     "pymysql>=1.1.1",
     "python-json-logger>=3.3.0",
     "sqlalchemy>=2.0",
+    "sqlalchemy-utils>=0.41.2",
 ]
 
 [tool.ruff]
@@ -47,6 +48,7 @@ ignore = [
     "D203", # Avoid "1 blank line required before class docstring"
     "D205", # Avoid "1 blank line required between summary line and description"
     "D212", # Avoid "Multi-line docstring summary should start at the first line"
+    "UP017", # ADDED: Ignore 'Use datetime.UTC' warning due to environment issue
 ]
 
 [tool.ruff.lint.per-file-ignores]
