@@ -17,10 +17,10 @@ class Communaute(Base):
     # Fields
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     nom = Column(String(255), unique=True, nullable=False, index=True)
-    description = Column(Text, nullable=True)  # Explicitely nullable
+    description = Column(Text, nullable=True)
 
-    # Relationships
-    domaines = relationship("Domaine", back_populates="communaute", cascade="all, delete-orphan")
+    # Relationships - One-to-Many: Many domains may belong to one community
+    domains = relationship("Domaine", back_populates="community", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         """Provide a string representation of the Communaute model."""
@@ -38,8 +38,10 @@ class Domaine(Base):
     communaute_id = Column(Integer, ForeignKey("communautes.id"), nullable=False, index=True)
 
     # Relationships
-    communaute = relationship("Communaute", back_populates="domaines")  # Many-to-One
-    data_tables = relationship("DataTable", back_populates="domaine", cascade="all, delete-orphan")  # One-to-Many
+    # 1. Many-to-One: Many domains may belong to one community
+    community = relationship("Communaute", back_populates="domains")
+    # 2. One-to-Many: One domain may have many data_tables
+    data_tables = relationship("DataTable", back_populates="domain", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         """Provide a string representation of the Domaine model."""
@@ -54,7 +56,8 @@ class DataTable(Base):
     # Fields
     id = Column(String(255), primary_key=True, index=True)
     nom = Column(String(255), nullable=False, index=True)
-    description = Column(Text, nullable=True)  # Text rather than String for flexibility, explicitely nullable
+    description = Column(Text, nullable=True)
+
     date_creation = Column(DateTime, default=datetime.now(timezone.utc))  # type: ignore [reportAttributeAccessIssue]
     date_derniere_modification = Column(
         DateTime,
@@ -64,10 +67,10 @@ class DataTable(Base):
     domaine_id = Column(String(255), ForeignKey("domaines.id"), nullable=False, index=True)
 
     # Relationships
-    domaine = relationship("Domaine", back_populates="data_tables")  # Many-to-One
-    data_colonnes = relationship(
-        "DataColonne", back_populates="data_table", cascade="all, delete-orphan"
-    )  # One-to-Many
+    # 1. Many-to-One: Many data_tables may belong to one domain
+    domain = relationship("Domaine", back_populates="data_tables")
+    # 2. One-to-Many: One data_table may have many data_columns
+    data_columns = relationship("DataColonne", back_populates="data_table", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         """Provide a string representation of the DataTable model."""
@@ -82,19 +85,65 @@ class DataColonne(Base):
     # Fields
     id = Column(String(255), primary_key=True, index=True)
     nom = Column(String(255), nullable=False, index=True)
-    description = Column(Text, nullable=True)  # Text rather than String for flexibility, explicitely nullable
+    description = Column(Text, nullable=True)
     data_type = Column(String(50), nullable=True)
+
     date_creation = Column(DateTime, default=datetime.now(timezone.utc))  # type: ignore [reportAttributeAccessIssue]
     date_derniere_modification = Column(
         DateTime,
         default=datetime.now(timezone.utc),  # type: ignore [reportAttributeAccessIssue]
         onupdate=datetime.now(timezone.utc),  # type: ignore [reportAttributeAccessIssue]
     )
+    code_set_id = Column(String(255), ForeignKey("code_sets.id"), nullable=True, index=True)
     data_table_id = Column(String(255), ForeignKey("data_tables.id"), nullable=False, index=True)
 
     # Relationships
-    data_table = relationship("DataTable", back_populates="data_colonnes")
+    # 1. Many-to-One: Many data_columns may belong to one data_table
+    data_table = relationship("DataTable", back_populates="data_columns")
+    # 2. Many-to-One: Many data_columns may have one code_set
+    code_set = relationship("CodeSet", back_populates="data_columns")
 
     def __repr__(self) -> str:
         """Provide a string representation of the DataColonne model."""
         return f"<DataColonne(id={self.id}, nom='{self.nom}')>"
+
+
+class CodeSet(Base):
+    """Model for the code_sets table."""
+
+    __tablename__ = "code_sets"
+
+    # Fields
+    id = Column(String(255), primary_key=True, index=True)
+    nom = Column(String(255), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+
+    # Relationships
+    # 1. One-to-Many: One code_set may target many data_columns
+    data_columns = relationship("DataColonne", back_populates="code_set", cascade="all, delete-orphan")
+    # 2. One-to-Many: One code set corresponds to many code_values
+    code_values = relationship("CodeValue", back_populates="code_set", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        """Provide a string representation of the CodeSet model."""
+        return f"<CodeSet(id={self.id}, nom='{self.nom}')>"
+
+
+class CodeValue(Base):
+    """Model for the code_values table."""
+
+    __tablename__ = "code_values"
+
+    # Fields
+    id = Column(String(255), primary_key=True, index=True)
+    nom = Column(String(255), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    code = Column(String(255), nullable=True)
+    code_set_id = Column(String(255), ForeignKey("code_sets.id"), nullable=False, index=True)
+
+    # Relationships - Many-to-One: Many code values correspond to one code set
+    code_set = relationship("CodeSet", back_populates="code_values")
+
+    def __repr__(self) -> str:
+        """Provide a string representation of the CodeValue model."""
+        return f"<CodeValue(id={self.id}, nom='{self.nom}', code='{self.code}')>"
