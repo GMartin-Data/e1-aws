@@ -94,15 +94,39 @@ def lambda_handler(event: dict, context: object) -> dict:
         return {"statusCode": 200, "body": "Not an S3 event."}
 
     bucket_name = s3_event_record["s3"]["bucket"]["name"]
-    object_key = s3_event_record["s3"]["bucket"]["key"]
+    object_key = s3_event_record["s3"]["object"]["key"]
     logger.info("📂 S3 event detected: Object '%s' in bucket '%s'", object_key, bucket_name)
+    # --- END S3 Event Parsing ---
 
-    if "Records" in event and event["Records"][0].get("eventSource") == "aws:s3":
-        bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
-        object_key = event["Records"][0]["s3"]["object"]["key"]
+    # --- S3 File Download and Pandas Read Logic ---
+    download_path = os.path.join("/tmp", os.path.basename(object_key))
+    excel_df: pd.DataFrame = pd.DataFrame()  # Initialize empty DataFrame
 
-    # --- Placeholder for Excel processing logic ---
-    logger.info("⚙️ Placeholder: Excel processing and database ingestion will happen here.")
-    # --- End placeholder ---
+    try:
+        logger.info("⬇️ Downloading S3 object '%s' from bucket '%s' to '%s'", object_key, bucket_name, download_path)
+        s3_client.download_file(bucket_name, object_key, download_path)
+        logger.info("✅ S3 object downloaded successfully.")
+
+        logger.info("📊 Reading Excel file '%s' into Pandas DataFrame...", download_path)
+        excel_df = pd.read_excel(download_path)
+        logger.info("✅ Excel file read into DataFrame. Rows: %d, Columns: %d", excel_df.shape[0], excel_df.shape[1])
+
+        # --- PLACEHOLDER FOR CLEANING/FORMATTING LOGIC ---
+        logger.info("🧹 Placeholder: Data cleaning and formatting would be applied here.")
+
+    except s3_client.exceptions.NoSuchKey:
+        logger.error("❌ S3 object '%s' not found in bucket '%s'.", object_key, bucket_name)
+        return {"statusCode": 404, "body": f"S3 object '{object_key}' not found."}
+
+    except Exception as e:
+        logger.exception("❌ Error during S3 download or Excel reading for object '%s': %s", object_key, e)
+        return {"statusCode": 500, "body": f"Processing failed: {e}"}
+
+    finally:
+        # Clean up the temporary download file from Lambda's /tmp directory
+        if os.path.exists(download_path):
+            os.remove(download_path)
+            logger.info("🗑️ Temporary file '%s' deleted from /tmp.", download_path)
+    # --- End S3 File Download and Pandas Read Logic ---
 
     return {"statusCode": 200, "body": "Hello from Lambda! Function executed successfully."}
