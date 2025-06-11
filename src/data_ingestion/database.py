@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any
 
 from sqlalchemy import create_engine
@@ -72,6 +73,7 @@ def init_db() -> None:
         raise
 
 
+@contextmanager
 def get_db() -> Generator[Session, Any, None]:
     """
     Dependency for FastAPI or other contexts to get a database session.
