@@ -114,6 +114,48 @@ def lambda_handler(event: dict, context: object) -> dict:
         # --- PLACEHOLDER FOR CLEANING/FORMATTING LOGIC ---
         logger.info("🧹 Placeholder: Data cleaning and formatting would be applied here.")
 
+        # --- Database Initialization and Basic ORM Insertion ---
+        logger.info("🗄️ Starting database initialization (if needed) and ORM insertion...")
+
+        # Initialize the database (creates DB and tables if they don't exist)
+        try:
+            init_db()
+            logger.info("✅ Database initialization complete.")
+        except Exception as e:
+            logger.exception("❌ Database initialization failed. Cannot proceed with ingestion.")
+            return {"statusCode": 500, "body": f"DB Initialization Failed: {e}"}
+
+        # Get a database session and perform basic ORM insertion
+        db_session: Session  # Type hint for the session object
+        try:
+            with get_db() as db_session:
+                # Create a sample Communaute record based on the file being processed
+                # This is a very basic example; full processing will be more complex.
+                communaute_name = f"Communaute from {os.path.basename(object_key)}"
+
+                # Check if Communaute already exists before adding (to avoid IntegrityError on re-runs)
+                existing_communaute = db_session.query(Communaute).filter_by(nom=communaute_name).first()
+
+                if not existing_communaute:
+                    logger.info("➕ Creating sample Communaute: %s", communaute_name)
+                    new_communaute = Communaute(nom=communaute_name, description=f"Auto-created from {object_key}")
+                    db_session.add(new_communaute)
+                    db_session.commit()  # Commit to persist
+                    db_session.refresh(new_communaute)  # Refresh to get auto-generated ID
+                    logger.info("✅ Sample Communaute created successfully: %s", new_communaute.id)
+                else:
+                    logger.info("⏩ Communaute '%s' already exists. Skipping creation.", communaute_name)
+                    new_communaute = existing_communaute  # Use existing for linking if needed later
+
+            logger.info("✔️ Basic ORM insertion test completed successfully.")
+
+        except Exception as e:
+            logger.exception("❌ Error during ORM insertion test: %s", e)
+            # It's good practice to rollback on error in a real transaction block,
+            # but with get_db() context, the session is already managed.
+            return {"statusCode": 500, "body": f"ORM Insertion Failed: {e}"}
+        # --- End NEW: Database Initialization and Basic ORM Insertion ---
+
     except s3_client.exceptions.NoSuchKey:
         logger.error("❌ S3 object '%s' not found in bucket '%s'.", object_key, bucket_name)
         return {"statusCode": 404, "body": f"S3 object '{object_key}' not found."}
