@@ -1,14 +1,18 @@
+import json
 import logging
+import os
 import sys
-# import json # Removed: Only needed for parsing S3 event if specific logic was added, but not for basic logging
-# import pymysql # Removed: Only needed for the temporary RDS connection test
+
+import boto3
+import pandas as pd
+from sqlalchemy.orm import Session  # Type-hinting
+
+from src.data_ingestion.settings import DataIngestionSettings
+from src.data_ingestion.database import init_db, get_db
+from src.data_ingestion.models import Communaute, Domaine, DataTable, DataColonne
 
 
-# Configure basic logging for the lambda runtime environment
-# These logs will automatically be sent to CloudWatch
-# For this, we have to explicitly set up a StreamHandler for robustness
-
-# Get the root logger and set its level
+# --- LOGGING SETUP ---
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -28,6 +32,33 @@ logger.addHandler(console_handler)
 
 # Finally, get a named logger for this specific module
 logger = logging.getLogger(__name__)
+
+
+# --- INITIALIZE GLOBAL SETTINGS AND S3 CLIENT ---
+# Good practise to load settings outside the handler if they don't change per invocation
+# This reduces cold start time
+try:
+    lambda_settings = DataIngestionSettings()  # type: ignore [reportCallIssue]
+    logger.info("⚙️ Lambda settings loaded successfully from environment.")
+except Exception as e:
+    logger.exception("❌ Failed to load Lambda settings. This is critical.")
+    # If settings cannot be loaded, the function cannot proceed.
+    # For Lambda, raising an exception will indicate a failed invocation.
+    raise RuntimeError("Failed to load Lambda settings.") from e
+
+# Initialize S3 client globally
+try:
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=lambda_settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=lambda_settings.AWS_SECRET_ACCESS_KEY.get_secret_value(),
+        region_name=lambda_settings.AWS_REGION,
+    )
+    logger.info("☁️ S3 client initialized for region: %s", lambda_settings.AWS_REGION)
+except Exception as e:
+    logger.exception("❌ Failed to initialize S3 client. This is critical.")
+    raise RuntimeError("Failed to initialize S3 client.") from e
+# --- END GLOBAL INITIALIZATION ---
 
 
 def lambda_handler(event: dict, context: object) -> dict:
@@ -53,9 +84,25 @@ def lambda_handler(event: dict, context: object) -> dict:
     logger.info("🎒 Context object: %s", context)
 
     # Log S3 event details if available
+    if "Records" not in event or not event["Records"]:
+        logger.error("❌ Invalid S3 event structure: Missing 'Records' key.")
+        return {"statusCode": 400, "body": "Invalid S3 event."}
+
+    s3_event_record = event["Records"][0]
+    if s3_event_record.get("eventSource") != "aws:s3":
+        logger.error("❌ Event source is not S3. Skipping processing.")
+        return {"statusCode": 200, "body": "Not an S3 event."}
+
+    bucket_name = s3_event_record["s3"]["bucket"]["name"]
+    object_key = s3_event_record["s3"]["bucket"]["key"]
+    logger.info("📂 S3 event detected: Object '%s' in bucket '%s'", object_key, bucket_name)
+
     if "Records" in event and event["Records"][0].get("eventSource") == "aws:s3":
         bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
         object_key = event["Records"][0]["s3"]["object"]["key"]
-        logger.info("📂 S3 event detected: Object '%s' in bucket '%s'", object_key, bucket_name)
+
+    # --- Placeholder for Excel processing logic ---
+    logger.info("⚙️ Placeholder: Excel processing and database ingestion will happen here.")
+    # --- End placeholder ---
 
     return {"statusCode": 200, "body": "Hello from Lambda! Function executed successfully."}
