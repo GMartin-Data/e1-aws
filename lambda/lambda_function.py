@@ -1,9 +1,12 @@
 import logging
 import sys
+# import json # Removed: Only needed for parsing S3 event if specific logic was added, but not for basic logging
+# import pymysql # Removed: Only needed for the temporary RDS connection test
+
 
 # Configure basic logging for the lambda runtime environment
 # These logs will automatically be sent to CloudWatch
-# For this, we have to explicitely set up a StreamHandler for robustness
+# For this, we have to explicitly set up a StreamHandler for robustness
 
 # Get the root logger and set its level
 logger = logging.getLogger()
@@ -45,9 +48,14 @@ def lambda_handler(event: dict, context: object) -> dict:
         dict: A response dictionary, typically containing 'statusCode' and 'body'.
 
     """
-    logger.info("⚡  Lambda function 'e1-aws-excel-processor' invoked.")
-    # Use %s for logging dynamic data to conform to Ruff G004 (deferred formatting)
-    logger.info("📥  Received event: %s", event)
-    logger.info("🎒  Context object: %s", context)  # Log context for debugging purposes if needed-
+    logger.info("⚡ Lambda function 'e1-aws-excel-processor' invoked.")
+    logger.info("📥 Received event: %s", event)
+    logger.info("🎒 Context object: %s", context)
+
+    # Log S3 event details if available
+    if "Records" in event and event["Records"][0].get("eventSource") == "aws:s3":
+        bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
+        object_key = event["Records"][0]["s3"]["object"]["key"]
+        logger.info("📂 S3 event detected: Object '%s' in bucket '%s'", object_key, bucket_name)
 
     return {"statusCode": 200, "body": "Hello from Lambda! Function executed successfully."}
